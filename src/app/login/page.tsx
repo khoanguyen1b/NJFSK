@@ -6,25 +6,30 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { authService } from "@/services/api";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("abcd@123");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    // Giả lập gọi API và nhận Bearer Token
-    setTimeout(() => {
-      const fakeToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake-token";
-      setAuth(fakeToken, { name: "Admin User", email: "admin@example.com" });
-      setLoading(false);
+    setError(null);
+    try {
+      const res = await authService.login({ email, password });
+      const { access_token, refresh_token, user } = res.data;
+      setAuth(access_token, refresh_token, user);
       router.push("/dashboard");
-    }, 1000);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Đăng nhập thất bại");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,12 +41,12 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
+              <label className="text-sm font-medium">Email</label>
               <Input
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -49,12 +54,13 @@ export default function LoginPage() {
               <label className="text-sm font-medium">Password</label>
               <Input
                 type="password"
-                placeholder="Enter your password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
+            {error && <p className="text-sm text-red-600">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>

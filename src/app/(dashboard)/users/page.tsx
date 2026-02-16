@@ -1,16 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const users = [
-  { id: 1, name: "John Doe", email: "john@example.com", role: "Admin", status: "Active" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Editor", status: "Active" },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "Viewer", status: "Inactive" },
-  { id: 4, name: "Alice Brown", email: "alice@example.com", role: "Admin", status: "Active" },
-  { id: 5, name: "Charlie Davis", email: "charlie@example.com", role: "Editor", status: "Pending" },
-];
+import { userService } from "@/services/api";
+import { User } from "@/types/api";
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await userService.list();
+        setUsers(res.data);
+      } catch (e: any) {
+        setError(e?.response?.data?.message || "Không tải được danh sách người dùng");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -20,34 +35,30 @@ export default function UsersPage() {
       <Card>
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="border-b bg-gray-50/50">
-                <tr className="transition-colors hover:bg-muted/50">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-gray-500">Name</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-gray-500">Email</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-gray-500">Role</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-gray-500">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {users.map((user) => (
-                  <tr key={user.id} className="transition-colors hover:bg-gray-50/50">
-                    <td className="p-4 align-middle font-medium">{user.name}</td>
-                    <td className="p-4 align-middle text-gray-600">{user.email}</td>
-                    <td className="p-4 align-middle">{user.role}</td>
-                    <td className="p-4 align-middle">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        user.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                        user.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.status}
-                      </span>
-                    </td>
+            {loading ? (
+              <div className="p-4">Đang tải...</div>
+            ) : error ? (
+              <div className="p-4 text-red-600">{error}</div>
+            ) : (
+              <table className="w-full caption-bottom text-sm">
+                <thead className="border-b bg-gray-50/50">
+                  <tr className="transition-colors hover:bg-muted/50">
+                    <th className="h-12 px-4 text-left align-middle font-medium text-gray-500">Full name</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-gray-500">Email</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-gray-500">Role</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {users.map((user) => (
+                    <tr key={user.id} className="transition-colors hover:bg-gray-50/50">
+                      <td className="p-4 align-middle font-medium">{user.full_name}</td>
+                      <td className="p-4 align-middle text-gray-600">{user.email}</td>
+                      <td className="p-4 align-middle">{user.role}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -10,16 +10,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const token = useAuthStore((state) => state.token);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const router = useRouter();
 
   useEffect(() => {
-    if (!token) {
+    if (!accessToken) {
       router.push("/login");
     }
-  }, [token, router]);
+  }, [accessToken, router]);
 
-  if (!token) return null;
+  if (!accessToken) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
