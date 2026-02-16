@@ -28,3 +28,11 @@ export interface Customer {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Note {
+  id: string;
+  content: string;
+  customer_id: string;
+  created_at?: string;
+  updated_at?: string;
+}

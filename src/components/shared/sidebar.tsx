@@ -11,7 +11,7 @@ const menuItems = [
   { icon: Home, label: "Home (Dashboard)", href: "/dashboard" },
   { icon: Users, label: "Users List", href: "/users" },
   { icon: Briefcase, label: "Customers List", href: "/customers" },
-  { icon: LayoutGrid, label: "UI Templates", href: "/templates" },
+  { icon: LayoutGrid, label: "Notes List", href: "/notes" },
 ];
 
 export function Sidebar() {
