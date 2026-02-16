@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,36 +20,67 @@ export default function NotesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const normalizeArrayData = <T,>(payload: unknown): T[] => {
+    if (Array.isArray(payload)) return payload as T[];
+    if (payload && typeof payload === "object") {
+      const record = payload as Record<string, unknown>;
+      if (Array.isArray(record.data)) return record.data as T[];
+      if (Array.isArray(record.items)) return record.items as T[];
+      if (Array.isArray(record.results)) return record.results as T[];
+    }
+    return [];
+  };
 
-  const fetchData = async () => {
+  const extractErrorMessage = (error: unknown, fallback: string): string => {
+    if (
+      error &&
+      typeof error === "object" &&
+      "response" in error &&
+      (error as { response?: { data?: { message?: string } } }).response?.data?.message
+    ) {
+      return (error as { response?: { data?: { message?: string } } }).response!.data!.message!;
+    }
+    return fallback;
+  };
+
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const [notesRes, customersRes] = await Promise.all([
-        noteService.list(),
-        customerService.list(),
-      ]);
-      console.log("Notes Response:", notesRes);
-      console.log("Customers Response:", customersRes);
-      
-      const notesData = Array.isArray(notesRes.data) ? notesRes.data : [];
-      setNotes(notesData);
-      
-      const customersData = Array.isArray(customersRes.data) ? customersRes.data : [];
+    const [notesResult, customersResult] = await Promise.allSettled([
+      noteService.list(),
+      customerService.list(),
+    ]);
+
+    let combinedError: string | null = null;
+
+    if (notesResult.status === "fulfilled") {
+      setNotes(normalizeArrayData<Note>(notesResult.value.data));
+    } else {
+      combinedError = extractErrorMessage(notesResult.reason, "Không tải được danh sách notes");
+    }
+
+    if (customersResult.status === "fulfilled") {
+      const customersData = normalizeArrayData<Customer>(customersResult.value.data);
       const customerMap = customersData.reduce((acc, curr) => {
         acc[curr.id] = curr;
         return acc;
       }, {} as Record<string, Customer>);
       setCustomers(customerMap);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || "Không tải được dữ liệu");
-    } finally {
-      setLoading(false);
+    } else {
+      const customerError = extractErrorMessage(
+        customersResult.reason,
+        "Không tải được danh sách khách hàng"
+      );
+      combinedError = combinedError ? `${combinedError}. ${customerError}` : customerError;
     }
-  };
+
+    setError(combinedError);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCreateNote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,11 +89,11 @@ export default function NotesPage() {
     setIsSubmitting(true);
     try {
       const res = await noteService.create({ content, customer_id: customerId });
-      setNotes([res.data, ...notes]);
+      setNotes((prev) => [res.data, ...prev]);
       setContent("");
       setCustomerId("");
-    } catch (e: any) {
-      alert(e?.response?.data?.message || "Không thể tạo note");
+    } catch (e: unknown) {
+      alert(extractErrorMessage(e, "Không thể tạo note"));
     } finally {
       setIsSubmitting(false);
     }
@@ -74,8 +105,8 @@ export default function NotesPage() {
     try {
       await noteService.delete(id);
       setNotes(notes.filter((n) => n.id !== id));
-    } catch (e: any) {
-      alert(e?.response?.data?.message || "Không thể xóa note");
+    } catch (e: unknown) {
+      alert(extractErrorMessage(e, "Không thể xóa note"));
     }
   };
 

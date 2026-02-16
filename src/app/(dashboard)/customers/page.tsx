@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { customerService } from "@/services/api";
 import { Customer } from "@/types/api";
 import { FileDown, FileSpreadsheet, Loader2, Mail } from "lucide-react";
@@ -92,6 +91,7 @@ export default function CustomersPage() {
             size="sm" 
             onClick={handleExportPdf} 
             disabled={exportingPdf}
+            className="disabled:opacity-100"
           >
             {exportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
             Export PDF
@@ -101,6 +101,7 @@ export default function CustomersPage() {
             size="sm" 
             onClick={handleExportExcel} 
             disabled={exportingExcel}
+            className="disabled:opacity-100"
           >
             {exportingExcel ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}
             Export Excel
@@ -139,7 +140,7 @@ export default function CustomersPage() {
                           size="sm"
                           onClick={() => handleSendEmail(c.id)}
                           disabled={sendingEmailId === c.id}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-100"
                         >
                           {sendingEmailId === c.id ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
