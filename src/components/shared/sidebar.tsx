@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, Briefcase, LayoutGrid, LogOut } from "lucide-react";
+import { Home, Users, Briefcase, LayoutGrid, FileSearch, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ const menuItems = [
   { icon: Users, label: "Users List", href: "/users" },
   { icon: Briefcase, label: "Customers List", href: "/customers" },
   { icon: LayoutGrid, label: "Notes List", href: "/notes" },
+  { icon: FileSearch, label: "Text Analyze", href: "/text-analyze" },
 ];
 
 export function Sidebar() {
