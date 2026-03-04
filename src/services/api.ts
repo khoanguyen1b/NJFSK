@@ -1,8 +1,8 @@
 import apiClient from '@/lib/api-client';
-import { ApiResponse, AuthResponse, User, Customer, Note } from '@/types/api';
+import { ApiResponse, AuthResponse, User, Customer, Note, AppSetting } from '@/types/api';
 
 export const authService = {
-  login: async (data: any) => {
+  login: async (data: { email: string; password: string }) => {
     const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/login', data);
     return response.data;
   },
@@ -100,6 +100,17 @@ export const noteService = {
   },
   delete: async (id: string) => {
     const response = await apiClient.delete<ApiResponse<null>>(`/notes/${id}`);
+    return response.data;
+  },
+};
+
+export const settingService = {
+  getByKey: async (key: string) => {
+    const response = await apiClient.get<ApiResponse<AppSetting>>(`/settings/${key}`);
+    return response.data;
+  },
+  upsertMany: async (data: Array<{ key: string; value: string }>) => {
+    const response = await apiClient.post<ApiResponse<AppSetting[]>>('/settings/bulk', data);
     return response.data;
   },
 };
